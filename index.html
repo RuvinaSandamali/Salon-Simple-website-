@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KDJ Salon - Modern Beauty & Style</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.163.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.163.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.2/p5.min.js"></script>
+
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #FFF8F7; /* Softer background */
+            color: #4A4A4A; /* Darker gray for better contrast */
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Custom gradient */
+        .brand-gradient {
+            background: linear-gradient(90deg, #EC4899, #F472B6, #F9A8D4); /* Refined pink gradient */
+        }
+
+        .nav-link {
+            @apply px-4 py-2 text-gray-700 hover:text-pink-600 relative transition-colors duration-300;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background-color: #EC4899; /* Pink */
+            transition: width 0.3s ease-in-out;
+        }
+
+        .nav-link.active::after,
+        .nav-link:hover::after {
+            width: 60%;
+        }
+
+        .nav-link.active {
+             @apply text-pink-600 font-semibold;
+        }
+
+        .section {
+            padding-top: 4rem; /* Consistent spacing */
+            padding-bottom: 4rem;
+        }
+
+        /* Canvas Styles */
+        #hero-canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.3; /* Make it subtle */
+        }
+
+         #p5-placeholder-canvas {
+            border: 1px dashed #F9A8D4; /* Light pink dashed border */
+            border-radius: 0.5rem;
+         }
+
+        /* Button Style */
+        .btn {
+            @apply px-6 py-3 rounded-full font-semibold transition duration-300 ease-in-out inline-block text-center;
+        }
+        .btn-primary {
+            @apply bg-pink-600 text-white hover:bg-pink-700 shadow-md hover:shadow-lg transform hover:-translate-y-0.5;
+        }
+        .btn-secondary {
+            @apply bg-transparent border-2 border-pink-600 text-pink-600 hover:bg-pink-50;
+        }
+
+        /* Card Style */
+        .content-card {
+            @apply bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300;
+        }
+    </style>
+</head>
+
+<body x-data="{ activeSection: 'home' }" class="bg-pink-50 text-gray-800">
+
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-sm">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <a href="#home" @click="activeSection = 'home'" class="text-3xl font-bold text-pink-700 font-serif">
+                    KDJ Salon
+                </a>
+
+                <div class="hidden md:flex items-center space-x-2">
+                    <a href="#home" @click="activeSection = 'home'" :class="{'active': activeSection === 'home'}" class="nav-link">Home</a>
+                    <a href="#services" @click="activeSection = 'services'" :class="{'active': activeSection === 'services'}" class="nav-link">Services</a>
+                    <a href="#about" @click="activeSection = 'about'" :class="{'active': activeSection === 'about'}" class="nav-link">About Us</a>
+                    <a href="#gallery" @click="activeSection = 'gallery'" :class="{'active': activeSection === 'gallery'}" class="nav-link">Gallery</a>
+                    <a href="#testimonials" @click="activeSection = 'testimonials'" :class="{'active': activeSection === 'testimonials'}" class="nav-link">Testimonials</a>
+                    <a href="#contact" @click="activeSection = 'contact'" :class="{'active': activeSection === 'contact'}" class="nav-link">Contact</a>
+                    <a href="#booking" @click="activeSection = 'booking'" class="ml-4 btn btn-primary">Book Now</a>
+                </div>
+
+                <div class="md:hidden flex items-center">
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-gray-700 hover:text-pink-600 focus:outline-none">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div x-show="mobileMenuOpen" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-2" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-2" class="md:hidden bg-white shadow-lg absolute w-full" @click.away="mobileMenuOpen = false">
+            <a href="#home" @click="activeSection = 'home'; mobileMenuOpen = false" class="block px-6 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600">Home</a>
+            <a href="#services" @click="activeSection = 'services'; mobileMenuOpen = false" class="block px-6 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600">Services</a>
+            <a href="#about" @click="activeSection = 'about'; mobileMenuOpen = false" class="block px-6 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600">About Us</a>
+            <a href="#gallery" @click="activeSection = 'gallery'; mobileMenuOpen = false" class="block px-6 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600">Gallery</a>
+            <a href="#testimonials" @click="activeSection = 'testimonials'; mobileMenuOpen = false" class="block px-6 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600">Testimonials</a>
+            <a href="#contact" @click="activeSection = 'contact'; mobileMenuOpen = false" class="block px-6 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600">Contact</a>
+            <a href="#booking" @click="activeSection = 'booking'; mobileMenuOpen = false" class="block px-6 py-3 text-center brand-gradient text-white my-2 mx-4 rounded-full">Book Now</a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <section id="home" class="section relative min-h-[80vh] flex items-center justify-center text-center overflow-hidden">
+            <div id="hero-canvas-container"></div> <div class="relative z-10" data-aos="fade-up">
+                <h1 class="text-5xl md:text-7xl font-bold text-pink-800 mb-4 leading-tight">
+                    Elevate Your Style <span class="brand-gradient text-transparent bg-clip-text">Effortlessly</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
+                    Discover bespoke beauty services designed to enhance your natural radiance and confidence at KDJ Salon.
+                </p>
+                <a href="#booking" @click="activeSection = 'booking'" class="btn btn-primary mr-2">Book an Appointment</a>
+                <a href="#services" @click="activeSection = 'services'" class="btn btn-secondary">Explore Services</a>
+            </div>
+        </section>
+
+        <section id="services" class="section bg-white rounded-2xl shadow-lg my-16">
+             <h2 class="text-4xl font-bold text-pink-700 mb-10 text-center" data-aos="fade-up">Our Signature Services</h2>
+             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                 <div class="content-card" data-aos="fade-up" data-aos-delay="100">
+                     <h3 class="text-2xl text-rose-600 font-semibold mb-3">Expert Hair Styling</h3>
+                     <p class="text-gray-600 mb-4">From chic cuts to vibrant colors and restorative treatments, our stylists create looks that complement you.</p>
+                     <ul class="list-disc list-inside text-gray-700 space-y-1">
+                         <li>Precision Haircuts & Styling</li>
+                         <li>Advanced Hair Coloring & Highlights</li>
+                         <li>Keratin & Smoothing Treatments</li>
+                         <li>Luxury Hair Spa & Masks</li>
+                         <li>Special Occasion Updos</li>
+                     </ul>
+                 </div>
+                 <div class="content-card" data-aos="fade-up" data-aos-delay="200">
+                     <h3 class="text-2xl text-rose-600 font-semibold mb-3">Rejuvenating Skin Care</h3>
+                     <p class="text-gray-600 mb-4">Indulge in facials and treatments tailored to your skin type, promoting a healthy, glowing complexion.</p>
+                     <ul class="list-disc list-inside text-gray-700 space-y-1">
+                         <li>Customized Facials (Hydrating, Anti-Aging)</li>
+                         <li>Deep Cleansing & Exfoliation</li>
+                         <li>Brightening Treatments</li>
+                         <li>Gentle Threading & Waxing</li>
+                         <li>Relaxing Face Massages</li>
+                     </ul>
+                 </div>
+                 <div class="content-card" data-aos="fade-up" data-aos-delay="300">
+                     <h3 class="text-2xl text-rose-600 font-semibold mb-3">Manicure & Pedicure</h3>
+                     <p class="text-gray-600 mb-4">Pamper your hands and feet with our meticulous nail care services for a polished finish.</p>
+                     <ul class="list-disc list-inside text-gray-700 space-y-1">
+                         <li>Classic & Gel Manicures</li>
+                         <li>Spa Pedicures</li>
+                         <li>Nail Art & Enhancements</li>
+                         <li>Paraffin Wax Treatments</li>
+                         <li>Callus Removal</li>
+                     </ul>
+                 </div>
+                 <div class="content-card md:col-span-2 lg:col-span-3" data-aos="fade-up">
+                     <h3 class="text-2xl text-rose-600 font-semibold mb-3">Bridal & Special Occasions</h3>
+                     <p class="text-gray-600 mb-4">Look and feel your absolute best on your special day with our comprehensive bridal packages, including hair, makeup, and pre-wedding pampering.</p>
+                     <a href="#contact" @click="activeSection = 'contact'" class="text-pink-600 hover:underline font-semibold">Inquire about Packages</a>
+                 </div>
+             </div>
+        </section>
+
+        <section id="about" class="section">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div data-aos="fade-right">
+                    <h2 class="text-4xl font-bold text-pink-700 mb-6">Our Story: Passion for Beauty</h2>
+                    <div class="prose prose-lg text-gray-700 max-w-none">
+                        <p>Founded on the belief that self-care is essential, <strong>KDJ Salon</strong> began as a dream to create a welcoming space where artistry and relaxation meet. For over a decade, we've been dedicated to mastering the latest techniques and trends in hair and beauty.</p>
+                        <p>Our team is comprised of passionate, experienced professionals who genuinely care about making you feel incredible. We prioritize using high-quality, safe products and tailor every service to your unique needs and desires. At KDJ Salon, it's not just about looking good; it's about feeling confident and cherished.</p>
+                        <h4 class="text-xl font-semibold text-rose-600 mt-6 mb-2">Our Values:</h4>
+                        <ul class="list-disc list-inside">
+                            <li>Client-Centric Approach</li>
+                            <li>Continuous Learning & Skill Enhancement</li>
+                            <li>High-Quality Products & Hygiene</li>
+                            <li>Warm & Relaxing Atmosphere</li>
+                            <li>Celebrating Individual Beauty</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="p-8 bg-gradient-to-br from-pink-100 to-rose-50 rounded-2xl shadow-inner" data-aos="fade-left">
+                    <h3 class="text-2xl font-semibold text-rose-600 mb-4 text-center">Meet Our Experts (Coming Soon)</h3>
+                    <p class="text-gray-600 text-center">We're excited to introduce you to the talented individuals behind KDJ Salon soon!</p>
+                     <div class="mt-6 h-64 bg-white rounded-lg flex items-center justify-center text-gray-400 italic shadow">
+                         Team Profile Area Placeholder
+                     </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="gallery" class="section bg-pink-50/50 rounded-2xl my-16">
+             <h2 class="text-4xl font-bold text-pink-700 mb-10 text-center" data-aos="fade-up">Visual Inspirations</h2>
+             <p class="text-center text-lg text-gray-600 mb-10 max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="100">
+                While we gather photos of our beautiful work, enjoy this abstract visual placeholder created with p5.js. Imagine stunning transformations here soon!
+             </p>
+             <div class="flex justify-center items-center h-96" data-aos="zoom-in">
+                 <div id="p5-placeholder-canvas-container"></div>
+             </div>
+             <p class="text-center text-gray-500 mt-4 italic">Gallery coming soon!</p>
+        </section>
+
+        <section id="testimonials" class="section">
+            <h2 class="text-4xl font-bold text-pink-700 mb-10 text-center" data-aos="fade-up">What Our Clients Say</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="content-card border-l-4 border-pink-500" data-aos="fade-up" data-aos-delay="100">
+                    <blockquote class="text-gray-700 italic mb-4">"KDJ Salon is my go-to place! The atmosphere is so relaxing, and my stylist always knows exactly how to bring my hair ideas to life. Absolutely fantastic!"</blockquote>
+                    <p class="font-semibold text-rose-600">- Sarah L.</p>
+                </div>
+                 <div class="content-card border-l-4 border-pink-500" data-aos="fade-up" data-aos-delay="200">
+                    <blockquote class="text-gray-700 italic mb-4">"I had the bridal package, and it was worth every penny. They made me feel so special and beautiful on my wedding day. Highly recommend their services!"</blockquote>
+                    <p class="font-semibold text-rose-600">- Janani P.</p>
+                </div>
+                 <div class="content-card border-l-4 border-pink-500" data-aos="fade-up" data-aos-delay="300">
+                    <blockquote class="text-gray-700 italic mb-4">"Professional, friendly, and incredibly skilled. I always leave KDJ Salon feeling refreshed and confident. Best facials in Colombo!"</blockquote>
+                    <p class="font-semibold text-rose-600">- Michael R.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="booking" class="section brand-gradient text-white rounded-2xl my-16 shadow-xl">
+             <div class="max-w-3xl mx-auto text-center" data-aos="fade-up">
+                <h2 class="text-4xl font-bold mb-6">Ready for Your Transformation?</h2>
+                <p class="text-xl mb-8">Booking your appointment is easy. Contact us via phone or email, or use the form below for inquiries. We can't wait to welcome you!</p>
+                <a href="#contact" @click="activeSection = 'contact'" class="btn bg-white text-pink-600 hover:bg-pink-50">Contact Us to Book</a>
+                </div>
+        </section>
+
+        <section id="contact" class="section">
+            <h2 class="text-4xl font-bold text-pink-700 mb-10 text-center" data-aos="fade-up">Get In Touch</h2>
+            <div class="grid md:grid-cols-2 gap-12">
+                <div data-aos="fade-right">
+                    <h3 class="text-2xl font-semibold text-rose-600 mb-4">Visit or Call Us</h3>
+                    <div class="space-y-4 text-lg text-gray-700">
+                        <p><strong>📍 Address:</strong> 123 Glam Street, Colombo, Sri Lanka</p>
+                        <p><strong>📞 Phone:</strong> <a href="tel:+94771234567" class="hover:text-pink-600">077-1234567</a></p>
+                        <p><strong>📧 Email:</strong> <a href="mailto:hello@kdjsalon.lk" class="hover:text-pink-600">hello@kdjsalon.lk</a></p>
+                        <p><strong>🕘 Open Hours:</strong><br> Monday - Saturday: 9:00 AM - 7:00 PM<br> Sunday: Closed</p>
+                    </div>
+                    <div class="mt-6 h-64 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 italic shadow-inner">
+                         Map Placeholder (e.g., Google Maps Embed)
+                    </div>
+                </div>
+
+                <div data-aos="fade-left">
+                     <h3 class="text-2xl font-semibold text-rose-600 mb-4">Send Us a Message</h3>
+                     <form action="#" method="POST" class="space-y-5">
+                         <div>
+                             <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                             <input type="text" name="name" id="name" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-pink-500 focus:border-pink-500">
+                         </div>
+                          <div>
+                             <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                             <input type="email" name="email" id="email" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-pink-500 focus:border-pink-500">
+                         </div>
+                          <div>
+                             <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number (Optional)</label>
+                             <input type="tel" name="phone" id="phone" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-pink-500 focus:border-pink-500">
+                         </div>
+                         <div>
+                             <label for="message" class="block text-sm font-medium text-gray-700">Message / Inquiry</label>
+                             <textarea name="message" id="message" rows="4" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-pink-500 focus:border-pink-500"></textarea>
+                         </div>
+                         <div>
+                             <button type="submit" class="w-full btn btn-primary py-3">
+                                 Send Message
+                             </button>
+                         </div>
+                     </form>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-gray-300 py-12 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-3 gap-8 text-center md:text-left">
+            <div>
+                <h4 class="text-xl font-semibold text-white mb-4 font-serif">KDJ Salon</h4>
+                <p class="text-sm">Your sanctuary for style, beauty, and confidence in the heart of Colombo.</p>
+                <div class="mt-4 flex justify-center md:justify-start space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-white">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clip-rule="evenodd" /></svg>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white">
+                         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.011 3.584-.069 4.85c-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07s-3.584-.012-4.85-.07c-3.252-.149-4.771-1.664-4.919-4.919-.058-1.265-.07-1.644-.07-4.85s.012-3.584.07-4.85c.149-3.225 1.664-4.771 4.919-4.919 1.266-.058 1.644-.07 4.85-.07zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948s.014 3.667.072 4.947c.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072s3.667-.014 4.947-.072c4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.947s-.014-3.667-.072-4.947c-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                    </a>
+                    </div>
+            </div>
+
+            <div>
+                <h4 class="text-lg font-semibold text-white mb-4">Quick Links</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#home" @click="activeSection = 'home'" class="hover:text-white">Home</a></li>
+                    <li><a href="#services" @click="activeSection = 'services'" class="hover:text-white">Services</a></li>
+                    <li><a href="#about" @click="activeSection = 'about'" class="hover:text-white">About Us</a></li>
+                    <li><a href="#gallery" @click="activeSection = 'gallery'" class="hover:text-white">Gallery</a></li>
+                    <li><a href="#testimonials" @click="activeSection = 'testimonials'" class="hover:text-white">Testimonials</a></li>
+                    <li><a href="#contact" @click="activeSection = 'contact'" class="hover:text-white">Contact</a></li>
+                    <li><a href="#booking" @click="activeSection = 'booking'" class="hover:text-white">Book Now</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="text-lg font-semibold text-white mb-4">Contact Info</h4>
+                <ul class="space-y-2 text-sm">
+                   <li>📍 123 Glam Street, Colombo</li>
+                   <li>📞 <a href="tel:+94771234567" class="hover:text-white">077-1234567</a></li>
+                   <li>📧 <a href="mailto:hello@kdjsalon.lk" class="hover:text-white">hello@kdjsalon.lk</a></li>
+                   <li>🕘 Mon-Sat: 9 AM - 7 PM</li>
+                </ul>
+            </div>
+        </div>
+         <div class="mt-8 pt-8 border-t border-gray-700 text-center text-sm text-gray-400">
+            &copy; <span x-text="new Date().getFullYear()"></span> KDJ Salon. All Rights Reserved. Website by Gemini AI.
+        </div>
+    </footer>
+
+    <script type="module">
+        // === Alpine.js Data ===
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('mobileMenuOpen', false); // For mobile menu toggle
+             // Add smooth scroll handling if needed, though html class="scroll-smooth" helps
+        });
+
+        // === AOS Initialization ===
+        AOS.init({
+            duration: 800, // Animation duration
+            once: true, // Only animate elements once
+            offset: 50, // Trigger animations slightly before they enter viewport
+        });
+
+        // === Three.js Hero Background ===
+        import * as THREE from 'three';
+
+        let camera, scene, renderer;
+        let particles;
+
+        function initThreeJS() {
+            const container = document.getElementById('hero-canvas-container');
+            if (!container) return;
+
+            // Scene
+            scene = new THREE.Scene();
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, container.offsetWidth / container.offsetHeight, 0.1, 1000);
+            camera.position.z = 5;
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); // alpha: true for transparent background
+            renderer.setSize(container.offsetWidth, container.offsetHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            // Particles
+            const particleCount = 500;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+            const color = new THREE.Color();
+
+            for (let i = 0; i < particleCount; i++) {
+                const i3 = i * 3;
+                positions[i3] = (Math.random() - 0.5) * 15;
+                positions[i3 + 1] = (Math.random() - 0.5) * 15;
+                positions[i3 + 2] = (Math.random() - 0.5) * 15;
+
+                // Pinkish/Rose colors
+                color.setHSL(Math.random() * 0.1 + 0.9, 0.7, Math.random() * 0.3 + 0.5); // Hue around pink/magenta, adjust saturation/lightness
+                colors[i3] = color.r;
+                colors[i3 + 1] = color.g;
+                colors[i3 + 2] = color.b;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            const material = new THREE.PointsMaterial({
+                size: 0.05,
+                vertexColors: true, // Use vertex colors
+                blending: THREE.AdditiveBlending, // Nice glow effect
+                transparent: true,
+                depthWrite: false // Helps with blending
+            });
+
+            particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+
+            // Handle Resize
+            window.addEventListener('resize', onWindowResize, false);
+
+            // Start Animation
+            animate();
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('hero-canvas-container');
+             if (!container || !renderer || !camera) return;
+
+            camera.aspect = container.offsetWidth / container.offsetHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.offsetWidth, container.offsetHeight);
+        }
+
+        function animate() {
+             if (!renderer) return; // Stop if renderer isn't initialized
+            requestAnimationFrame(animate);
+
+            const time = Date.now() * 0.0001; // Slow down rotation
+
+            if (particles) {
+                particles.rotation.x = time * 0.2;
+                particles.rotation.y = time * 0.4;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Initialize Three.js on load
+        initThreeJS();
+
+
+        // === p5.js Placeholder Sketch ===
+        let p5Sketch = function(p) {
+          let particles = [];
+          const numParticles = 50;
+          let bgColor;
+          let particleColor;
+
+          p.setup = function() {
+            const container = document.getElementById('p5-placeholder-canvas-container');
+            let cnv = p.createCanvas(container.offsetWidth, container.offsetHeight);
+            cnv.parent('p5-placeholder-canvas-container');
+            cnv.id('p5-placeholder-canvas'); // Add ID for styling
+
+            bgColor = p.color(255, 248, 247, 150); // Slightly transparent background matching body
+            particleColor = p.color(236, 72, 153, 180); // Pink color with alpha
+
+            for(let i = 0; i < numParticles; i++) {
+              particles.push(new Particle(p.random(p.width), p.random(p.height)));
+            }
+             p.noStroke();
+          };
+
+          p.draw = function() {
+            p.background(bgColor);
+            for(let particle of particles) {
+              particle.update();
+              particle.display();
+              particle.checkEdges();
+            }
+            connectParticles();
+          };
+
+           p.windowResized = function() {
+                const container = document.getElementById('p5-placeholder-canvas-container');
+                p.resizeCanvas(container.offsetWidth, container.offsetHeight);
+                 // Reinitialize particles if needed based on new size
+                 particles = [];
+                 for(let i = 0; i < numParticles; i++) {
+                   particles.push(new Particle(p.random(p.width), p.random(p.height)));
+                 }
+            };
+
+
+          function connectParticles() {
+                let maxDist = 100;
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        let d = p.dist(particles[i].pos.x, particles[i].pos.y, particles[j].pos.x, particles[j].pos.y);
+                        if (d < maxDist) {
+                            let alpha = p.map(d, 0, maxDist, 150, 0); // Fade line based on distance
+                            p.stroke(236, 72, 153, alpha); // Pink line color
+                            p.strokeWeight(0.5);
+                            p.line(particles[i].pos.x, particles[i].pos.y, particles[j].pos.x, particles[j].pos.y);
+                        }
+                    }
+                }
+                 p.noStroke(); // Reset stroke for particles
+            }
+
+
+          class Particle {
+            constructor(x, y) {
+              this.pos = p.createVector(x, y);
+              this.vel = p5.Vector.random2D().mult(p.random(0.5, 1.5));
+              this.size = p.random(2, 5);
+            }
+
+            update() {
+              this.pos.add(this.vel);
+            }
+
+            display() {
+              p.fill(particleColor);
+              p.ellipse(this.pos.x, this.pos.y, this.size, this.size);
+            }
+
+            checkEdges() {
+              if (this.pos.x < 0 || this.pos.x > p.width) {
+                this.vel.x *= -1;
+              }
+              if (this.pos.y < 0 || this.pos.y > p.height) {
+                this.vel.y *= -1;
+              }
+            }
+          }
+        };
+
+        // Initialize p5.js sketch in instance mode
+        new p5(p5Sketch);
+
+    </script>
+
+</body>
+</html>
